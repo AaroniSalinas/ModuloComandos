@@ -6,7 +6,7 @@ Podrás conocer las líbrerías necesarias y los pasos a seguir para la correcta
 
 Puedes visitar el [wiki](https://github.com/AaroniSalinas/ModuloComandos/wiki) para más información.
 
-**Equipo Dinamita
-*Nashely Chan
-*Rodrigo Olivares
-*Aaroni Salinas
+**Equipo Dinamita**
+> Nashely Chan
+> Rodrigo Olivares
+> Aaroni Salinas
