@@ -1,25 +1,27 @@
+//Se incluye las librerías necesarias.
+
 #include "LedControlMS.h"
 #include <MaxMatrix.h>
-#define NumeroMatrices 4     // Indicamos cuántas matrices vamos a utilizar, 1
+// Indicamos cuántas matrices vamos a utilizar
+#define NumeroMatrices 4 
+//Función para imprimir
 #define DEBUG(a) Serial.println(a);
+
+//Variables necesarias para el funcionamiento del código
 int i=0;
 int fps=100;
- String pause;
-  
+String pause;  
 int data = 12;
 int load = 10;
 int clock = 11;
-int maxInUse = 4; //change this variable to set how many MAX7219's you'll use
-MaxMatrix m(data, load, clock, maxInUse);
-byte buffer[10];
 String dato;
+MaxMatrix m(data, load, clock, NumeroMatrices);
 LedControl lc=LedControl(12,11,10, NumeroMatrices);
 
 
 
 void setup()
 {
-         //noInterrupts();
          Serial.begin(9600);
          m.init();
          m.setIntensity(8);
@@ -33,9 +35,10 @@ void setup()
         }
 }
 
+/* Es el menú de que hace que reciba los comandos por el serial, cada comando va pidiendo la función necesaria
+*/
 void loop(){
   String control;
-   //DEBUG("Comando Control");
    if (Serial.available()){
       control = Serial.readStringUntil('\n');
       DEBUG("Comando Control");
@@ -50,69 +53,59 @@ void loop(){
         
         while(command == ""){
            command = Serial.readStringUntil('\n');
-          //DEBUG(command);
-          //DEBUG("Entre al while");
         }
 
-        if(command == "write!"){
+        if(command == "write!"|| command == "WRITE!"){
           DEBUG("Escribir");
           escribirMensaje();
           }
-       else if(command == "blank!"){
+       else if(command == "blank!"|| command == "BLANK!"){
           DEBUG("Blanquear");
           limpiarPantalla();
           }
-       else if(command == "fps!"){
+       else if(command == "fps!"|| command == "FPS!"){
           DEBUG("Frames");
           fps= frames();
-          /*DEBUG("Ahora el fps es del main deeee:");
-          DEBUG(fps);*/
        }
-       else if(command == "pause!"){
+       else if(command == "pause!"|| command == "PAUSE!"){
           DEBUG("Pausar");
           pausarPantalla();
        }
-       else if(command == "logo!"){
+       else if(command == "logo!"|| command == "LOGO!"){
           DEBUG("Mostrar logo");
           logo();
        }
-       else if(command == "show!"){
+       else if(command == "show!"|| command == "SHOW!"){
           DEBUG("Show");
           escribirMensaje();
           logo();
         }
-        else if(command == "data!"){
+        else if(command == "data!"|| command == "DATA!"){
           DEBUG("Data");
+          limpiarPantalla();
           datasDatos();
         }
    }
 }
 
+
+/*Va escribir el mensaje previamente guardado en las matrices, las letras
+ * se van mostrando con cierta velocidad puesta por los fps; en caso
+ * de que no se haya guardado ninguna palabra, se manda a llamar la función 
+ * de dataDatos que es donde se guardan los datos y muestra ahora sí el mensaje.
+*/
 void escribirMensaje(){
 
   while(dato==""){
-    DEBUG("Debes poner los datos con el comando data");
+    DEBUG("Debes poner los datos, mandamos a llamar el comando data");
     datasDatos();
   }
   int stringLength;
   char ch0, ch1, ch2, ch3;
   int nextCharIndex=0;
   delay(500);
-  /*DEBUG("Introduce the message");
-  //String dato;
-  dato = Serial.readStringUntil('\n');
-  //while(dato.length()<1){
-  while(dato==""){
-         dato = Serial.readStringUntil('\n');
-  }*/
       
   stringLength=dato.length();
-  //Serial.println(dato);
-  //Serial.println(stringLength);
-  // help=dato.length();
-     
- 
-
   for(int i=0;i<stringLength;i++){
     
     pause = Serial.readStringUntil('\n');
@@ -135,12 +128,10 @@ void escribirMensaje(){
     }
     
   }
- /* DEBUG("Mi fram FINAL:");
-  DEBUG(fps);*/
 }
 
-
-
+/*Pide los datos a ingresa para que se vean en las matrices de led
+*/
 void datasDatos(){
 
   DEBUG("Introduce el  mensanje");
@@ -156,6 +147,10 @@ void datasDatos(){
 }
 
 
+
+/*Apaga todos los led de los 4 módulos y 
+ * los vuelve a prender para apagarlos nuevamente
+*/
 void limpiarPantalla(){
   //Serial.println("LIMPIAR PANTALLA");
   for(i=0;i<NumeroMatrices;i++)
@@ -171,11 +166,12 @@ void limpiarPantalla(){
   for(i=0;i<NumeroMatrices;i++)
   lc.clearDisplay(i);
   delay(fps);
-
-  //Serial.println( "ok");
     
 }
 
+
+/*Va matando tiempo hasta que el usuario meta el comando pausa! y regresará a donde estaba
+*/
 void pausarPantalla(){
   do{
       pause = Serial.readStringUntil('\n');
@@ -185,6 +181,15 @@ void pausarPantalla(){
 }
 
 
+
+
+/*Va checando la velocidad en la que se mueve los datos en la matriz de led
+Se pide un número de 10 al 25 con una terminación de *, en caso de que no
+se cumpla dicha tarea, te sigue pidiendo el número,dicho número va a 
+modificar la velocidad con la que pasen los datos en la matrices, para que
+la velocidad no fuera muy chica, se multiplica por 10, para tener un rango de
+100 a 250 milisegundos.
+*/
 int frames(){
   String stringFPS;
   int fpslocal=0;
@@ -193,12 +198,6 @@ int frames(){
   while(stringFPS==""){
          stringFPS = Serial.readStringUntil('*');
   }
- /* DEBUG("Mi frames es de:");
-  DEBUG(stringFPS);
-  
-  fpslocal=stringFPS.toInt();
-  DEBUG("El int es dede:");
-  DEBUG(fpslocal);*/
 
   while(fpslocal<10 || fpslocal >25)
   {
@@ -215,9 +214,14 @@ int frames(){
 
 }
 
+
+//Imprime el logo, y checa si hay un comando pause! en el serial
 void logo(){
-   //Serial.println("LOGO");
    for(int i=0;i<4;i++){
+     pause = Serial.readStringUntil('\n');
+      if(pause=="pause!"){
+       pausarPantalla();
+      }
       lc.setColumn(i,3,0xFF);
       lc.setColumn(i,4,0xFF);
       lc.setRow(i,3,0xFF);
@@ -240,6 +244,9 @@ void logo(){
       lc.setLed(i,6,2,false);
       lc.setRow(i,4,0x00);
       delay(fps);
-    }
-    //Serial.println( "ok");
+      pause = Serial.readStringUntil('\n');
+      if(pause=="pause!"){
+       pausarPantalla();
+      }
+    }  
 }
